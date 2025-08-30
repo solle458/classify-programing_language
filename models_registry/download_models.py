@@ -55,6 +55,21 @@ def rebuild_model():
         )
         model.fit(X_train_tfidf, y_train)
         
+        # テストデータで性能評価
+        print("📊 モデル性能を評価中...")
+        y_train, X_train, y_test, X_test = data_loader.load()
+        X_test_tfidf = vectorizer.transform(X_test)
+        
+        # 予測と評価
+        y_pred = model.predict(X_test_tfidf)
+        from sklearn.metrics import accuracy_score, f1_score
+        
+        accuracy = accuracy_score(y_test, y_pred)
+        f1 = f1_score(y_test, y_pred, average='weighted')
+        
+        print(f"🎯 精度: {accuracy:.4f}")
+        print(f"🎯 F1スコア: {f1:.4f}")
+        
         # モデル保存
         model_path = "models_registry/lr_baseline_001.joblib"
         print(f"💾 モデルを保存中: {model_path}")
@@ -63,7 +78,13 @@ def rebuild_model():
         model_data = {
             'model': model,
             'vectorizer': vectorizer,
-            'classes': model.classes_
+            'classes': model.classes_,
+            'performance': {
+                'accuracy': float(accuracy),
+                'f1_score': float(f1),
+                'n_features': 5000,
+                'n_classes': len(model.classes_)
+            }
         }
         
         joblib.dump(model_data, model_path)
@@ -72,11 +93,46 @@ def rebuild_model():
         file_size = os.path.getsize(model_path) / (1024 * 1024)
         print(f"✅ モデル再構築完了! サイズ: {file_size:.1f}MB")
         
+        # model_info.jsonを更新
+        update_model_info(accuracy, f1, file_size)
+        
         return True
         
     except Exception as e:
         print(f"❌ モデル再構築エラー: {e}")
         return False
+
+def update_model_info(accuracy: float, f1_score: float, file_size_mb: float):
+    """model_info.jsonを実際の性能で更新"""
+    try:
+        import json
+        import time
+        
+        model_info = {
+            "models": [
+                {
+                    "id": "lr_baseline_001",
+                    "name": "LR Cloud Optimized (Auto-generated)",
+                    "type": "logistic_regression",
+                    "file_path": "models_registry/lr_baseline_001.joblib",
+                    "accuracy": round(accuracy, 4),
+                    "f1_score": round(f1_score, 4),
+                    "file_size_mb": round(file_size_mb, 1),
+                    "created_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                    "is_active": True,
+                    "description": f"Auto-generated lightweight model (max_features=5000). Accuracy: {accuracy:.2%}"
+                }
+            ],
+            "default_model_id": "lr_baseline_001"
+        }
+        
+        with open("models_registry/model_info.json", "w") as f:
+            json.dump(model_info, f, indent=2)
+        
+        print(f"📝 model_info.json更新完了 (精度: {accuracy:.2%})")
+        
+    except Exception as e:
+        print(f"⚠️ model_info.json更新エラー: {e}")
 
 def ensure_model_exists():
     """モデルファイルが存在しない場合は再構築"""

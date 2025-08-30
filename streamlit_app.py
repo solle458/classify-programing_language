@@ -90,19 +90,45 @@ def main():
         
         # モデル追加機能
         with st.expander("➕ モデル追加"):
-            st.write("新しいモデルをアップロードしてください")
+            st.markdown("""
+            **新しいモデルをアップロードしてください**
+            
+            **対応形式**:
+            - `.joblib` - scikit-learn形式のモデルファイル
+            
+            **推奨形式** (新形式):
+            ```python
+            {
+                'model': sklearn_model,
+                'vectorizer': tfidf_vectorizer,
+                'classes': model.classes_
+            }
+            ```
+            
+            **対応形式** (旧形式):
+            - scikit-learnモデルのみ（前処理器は自動再構築）
+            """)
+            
             uploaded_model = st.file_uploader(
                 "モデルファイル (.joblib)",
                 type=['joblib'],
-                help="joblib形式で保存されたscikit-learnモデル"
+                help="joblib形式で保存されたscikit-learnモデル（辞書形式推奨）"
             )
             
             if uploaded_model is not None:
-                model_name = st.text_input("モデル名", value=f"Custom Model {len(active_models)+1}")
-                model_description = st.text_area("説明", value="ユーザーがアップロードしたカスタムモデル")
+                # ファイル内容の事前検証
+                file_valid, validation_msg = validate_uploaded_model(uploaded_model)
                 
-                if st.button("📤 モデルを追加"):
-                    add_custom_model(uploaded_model, model_name, model_description)
+                if file_valid:
+                    st.success(f"✅ {validation_msg}")
+                    model_name = st.text_input("モデル名", value=f"Custom Model {len(active_models)+1}")
+                    model_description = st.text_area("説明", value="ユーザーがアップロードしたカスタムモデル")
+                    
+                    if st.button("📤 モデルを追加"):
+                        add_custom_model(uploaded_model, model_name, model_description)
+                else:
+                    st.error(f"❌ {validation_msg}")
+                    st.info("💡 対応形式については上記の説明を参照してください")
         
         # モデル削除機能
         if len(active_models) > 1:  # 最低1つのモデルは残す
@@ -235,6 +261,54 @@ def add_custom_model(uploaded_file, model_name: str, description: str):
         
     except Exception as e:
         st.error(f"❌ モデル追加エラー: {e}")
+
+
+def validate_uploaded_model(uploaded_file):
+    """アップロードされたモデルファイルを検証"""
+    try:
+        # ファイルの先頭に戻す
+        uploaded_file.seek(0)
+        
+        # joblibでロードを試行
+        import joblib
+        import io
+        
+        # バイトデータを一時的にファイル様オブジェクトに変換
+        model_data = joblib.load(io.BytesIO(uploaded_file.read()))
+        
+        # 形式を検証
+        if isinstance(model_data, dict):
+            # 新形式（推奨）
+            required_keys = ['model', 'vectorizer']
+            missing_keys = [key for key in required_keys if key not in model_data]
+            
+            if missing_keys:
+                return False, f"辞書形式ですが、必要なキー {missing_keys} が不足しています"
+            
+            # モデルがscikit-learn系かチェック
+            model = model_data['model']
+            if not hasattr(model, 'predict'):
+                return False, "モデルにpredict()メソッドがありません"
+                
+            # ベクトライザーがTF-IDF系かチェック
+            vectorizer = model_data['vectorizer']
+            if not hasattr(vectorizer, 'transform'):
+                return False, "ベクトライザーにtransform()メソッドがありません"
+            
+            return True, f"新形式のモデル（推奨形式）- クラス数: {len(model_data.get('classes', []))}"
+            
+        else:
+            # 旧形式（モデルのみ）
+            if not hasattr(model_data, 'predict'):
+                return False, "モデルにpredict()メソッドがありません"
+            
+            return True, "旧形式のモデル（前処理器は自動再構築されます）"
+            
+    except Exception as e:
+        return False, f"ファイル読み込みエラー: {str(e)}"
+    finally:
+        # ファイルポインタを先頭に戻す
+        uploaded_file.seek(0)
 
 
 def delete_model(model_id: str):

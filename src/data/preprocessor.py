@@ -38,7 +38,13 @@ class NaturalLanguagePreprocessor(Preprocessor):
     def __init__(self, vectorizer=None, max_length: int = 128):
         if vectorizer is None:
             from sklearn.feature_extraction.text import TfidfVectorizer
-            self.vectorizer = TfidfVectorizer()
+            self.vectorizer = TfidfVectorizer(
+                                max_features=5000,    # 特徴量を5000個に制限 ← 主要な軽量化
+                                ngram_range=(1, 2),   # 1-gram, 2-gramのみ
+                                max_df=0.95,          # 95%以上の文書に出現する語を除外
+                                min_df=2,             # 2回未満の語を除外
+                                stop_words='english'  # 英語ストップワード除外
+                            )
         else:
             self.vectorizer = vectorizer
         self.max_length = max_length

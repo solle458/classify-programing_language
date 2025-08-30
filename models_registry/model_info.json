@@ -2,39 +2,15 @@
   "models": [
     {
       "id": "lr_baseline_001",
-      "name": "LR Cloud Optimized",
+      "name": "LR Cloud Optimized (Auto-generated)",
       "type": "logistic_regression",
       "file_path": "models_registry/lr_baseline_001.joblib",
-      "accuracy": 0.8084,
-      "f1_score": 0.8059,
-      "file_size_mb": 20.0,
-      "created_at": "2025-08-30T20:06:03",
+      "accuracy": 0.7916,
+      "f1_score": 0.791,
+      "file_size_mb": 4.2,
+      "created_at": "2025-08-30T21:56:20",
       "is_active": true,
-      "description": "Streamlit Cloud optimized model with reduced features (max_features=5000)"
-    },
-    {
-      "id": "lr_baseline_002",
-      "name": "LR Baseline v2",
-      "type": "logistic_regression", 
-      "file_path": "models_registry/lr_baseline_002.joblib",
-      "accuracy": 0.8084,
-      "f1_score": 0.8059,
-      "file_size_mb": 106.0,
-      "created_at": "2025-08-30T20:15:31",
-      "is_active": false,
-      "description": "Alternative logistic regression model (min_samples=200) - Disabled for deployment"
-    },
-    {
-      "id": "lr_baseline_003",
-      "name": "LR Baseline v3 (Fast)",
-      "type": "logistic_regression",
-      "file_path": "models_registry/lr_baseline_003.joblib", 
-      "accuracy": 0.7602,
-      "f1_score": 0.7473,
-      "file_size_mb": 184.0,
-      "created_at": "2025-08-30T20:04:19",
-      "is_active": false,
-      "description": "Faster model with lower accuracy (min_samples=100) - Disabled for deployment"
+      "description": "Auto-generated lightweight model (max_features=5000). Accuracy: 79.16%"
     }
   ],
   "default_model_id": "lr_baseline_001"
