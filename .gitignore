@@ -1,0 +1,45 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Machine Learning specific
+*.pkl
+*.h5
+*.pb
+*.onnx
+checkpoints/
+
+# Exclude all model files (too large for GitHub)
+models_registry/*.joblib
+
+# Keep only model info and download script
+!models_registry/model_info.json
+!models_registry/download_models.py
+
+# Experiment outputs
+experiments/*/
+!experiments/.gitkeep
+logs/
+*.log
+
+# Data files (if large)
+data/raw/
+data/processed/
+!data/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,19 @@
+# Core ML dependencies
+numpy>=2.3.2
+pandas>=2.2.3
+scikit-learn>=1.7.1
+joblib>=1.4.2
+
+# Data processing
+datasets>=4.0.0
+transformers>=4.56.0
+
+# Web app
+streamlit>=1.28.0
+
+# Configuration
+pyyaml>=6.0.2
+
+# Optional visualization (lightweight)
+matplotlib>=3.10.5
+seaborn>=0.13.2
