@@ -4,6 +4,7 @@ data:
   validation_split: 0.1
   normalize: false
   min_samples_per_class: 200
+  lightweight: false  # true: 軽量化モデル（5000特徴量）, false: フル機能モデル
 
 model:
   model_type: "logistic_regression"

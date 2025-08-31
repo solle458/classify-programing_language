@@ -1,0 +1,32 @@
+data:
+  dataset_name: "programming_language"
+  batch_size: 32
+  validation_split: 0.1
+  normalize: false
+  min_samples_per_class: 200
+  lightweight: true  # 軽量化モデル（5000特徴量）
+
+model:
+  model_type: "logistic_regression"
+  parameters:
+    max_iter: 500  # 軽量化のためイテレーション数も削減
+    solver: "saga"
+    C: 3.0
+    penalty: "elasticnet"
+    l1_ratio: 0.15
+    class_weight: "balanced"
+    n_jobs: 1      # Cloud環境用
+    verbose: 1
+
+training:
+  epochs: 10
+  learning_rate: 0.001
+  early_stopping: true
+  patience: 5
+
+experiment_name: "classify-programing_language_lightweight"
+random_seed: 42
+
+logging:
+  level: "INFO"
+  log_file: "experiments/logs/experiment.log"

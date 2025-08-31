@@ -11,6 +11,18 @@
       "created_at": "2025-08-30T21:56:20",
       "is_active": true,
       "description": "Auto-generated lightweight model (max_features=5000). Accuracy: 79.16%"
+    },
+    {
+      "id": "lr_baseline_new",
+      "name": "LR Baseline (New Format)",
+      "type": "logistic_regression", 
+      "file_path": "models_registry/lr_baseline_new_format.joblib",
+      "accuracy": 0.8084,
+      "f1_score": 0.8059,
+      "file_size_mb": 109.0,
+      "created_at": "2025-08-30T22:09:30",
+      "is_active": true,
+      "description": "Full-featured model with integrated TF-IDF vectorizer (new format). High accuracy: 80.84%"
     }
   ],
   "default_model_id": "lr_baseline_001"

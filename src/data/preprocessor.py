@@ -35,16 +35,21 @@ class ImagePreprocessor(Preprocessor):
 
 class NaturalLanguagePreprocessor(Preprocessor):
     """自然言語データの前処理"""
-    def __init__(self, vectorizer=None, max_length: int = 128):
+    def __init__(self, vectorizer=None, max_length: int = 128, lightweight: bool = False):
         if vectorizer is None:
             from sklearn.feature_extraction.text import TfidfVectorizer
-            self.vectorizer = TfidfVectorizer(
-                                max_features=5000,    # 特徴量を5000個に制限 ← 主要な軽量化
-                                ngram_range=(1, 2),   # 1-gram, 2-gramのみ
-                                max_df=0.95,          # 95%以上の文書に出現する語を除外
-                                min_df=2,             # 2回未満の語を除外
-                                stop_words='english'  # 英語ストップワード除外
-                            )
+            if lightweight:
+                # 軽量化設定（Streamlit Cloud用）
+                self.vectorizer = TfidfVectorizer(
+                    max_features=7500,
+                    ngram_range=(1, 3),
+                    max_df=0.90,
+                    min_df=3,
+                    stop_words=None
+                )
+            else:
+                # デフォルト設定（フル機能）
+                self.vectorizer = TfidfVectorizer()
         else:
             self.vectorizer = vectorizer
         self.max_length = max_length
@@ -78,8 +83,8 @@ class StandardPreprocessor(Preprocessor):
 class PreprocessorFactory:
     """前処理のファクトリクラス"""
     @staticmethod
-    def create_preprocessor(dataset_name: str, normalize: bool = True) -> Preprocessor:
+    def create_preprocessor(dataset_name: str, normalize: bool = True, lightweight: bool = False) -> Preprocessor:
         if dataset_name == "programming_language":
-            return NaturalLanguagePreprocessor()
+            return NaturalLanguagePreprocessor(lightweight=lightweight)
         else:
             raise ValueError(f"Unknown dataset: {dataset_name}")

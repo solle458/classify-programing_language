@@ -61,10 +61,14 @@ def main():
         
         # 前処理
         logger.info("Preprocessing data...")
+        lightweight = getattr(config.data, 'lightweight', False)
         preprocessor = PreprocessorFactory.create_preprocessor(
             config.data.dataset_name, 
-            normalize=config.data.normalize
+            normalize=config.data.normalize,
+            lightweight=lightweight
         )
+        if lightweight:
+            logger.info("Using lightweight preprocessing (max_features=7500)")
 
         # トレーナーの設定
         trainer = Trainer(
@@ -99,10 +103,10 @@ def main():
         logger.info(f"Results - Accuracy: {metrics['accuracy']:.4f}, "
                    f"F1: {metrics['f1_score']:.4f}")
         
-        # モデル保存
+        # モデル保存（新形式: モデル + 前処理器）
         model_path = experiment_dir / "model.joblib"
-        trained_model.save(str(model_path))
-        logger.info(f"Model saved to: {model_path}")
+        trained_model.save(str(model_path), preprocessor=trainer.preprocessor)
+        logger.info(f"Model saved (new format) to: {model_path}")
         
         # 実験結果保存
         end_time = time.time()

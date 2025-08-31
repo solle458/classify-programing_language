@@ -10,19 +10,30 @@ class BaseModel(ABC):
         self.is_fitted = False
 
     @abstractmethod
-    def fit(self, X: np.ndarray, y: np.ndarray) -> 'BaseModel':
+    def fit(self, X: np.ndarray, y: np.ndarray, verbose: int = 1) -> 'BaseModel':
         pass
 
     @abstractmethod
     def predict(self, X: np.ndarray) -> np.ndarray:
         pass
 
-    def save(self, path: str) -> None:
-        """モデルを保存"""
+    def save(self, path: str, preprocessor=None) -> None:
+        """モデルを保存（新形式対応）"""
         if not self.is_fitted:
             raise ValueError("Model must be fitted before saving")
 
-        joblib.dump(self.model, path)
+        if preprocessor is not None:
+            # 新形式: モデル + 前処理器
+            model_data = {
+                'model': self.model,
+                'vectorizer': preprocessor,
+                'classes': getattr(self.model, 'classes_', None),
+                'model_type': self.__class__.__name__
+            }
+            joblib.dump(model_data, path)
+        else:
+            # 旧形式: モデルのみ（下位互換性）
+            joblib.dump(self.model, path)
 
     def load(self, path: str) -> 'BaseModel':
         """モデルを読み込み"""

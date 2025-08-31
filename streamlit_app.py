@@ -235,6 +235,10 @@ def add_custom_model(uploaded_file, model_name: str, description: str):
         with open(model_path, "wb") as f:
             f.write(uploaded_file.read())
         
+        # モデルの性能評価を実行
+        with st.spinner("🔄 モデルの性能を評価中..."):
+            accuracy, f1_score = evaluate_custom_model(model_path)
+        
         # モデル情報を更新
         model_info = load_model_info()
         new_model = {
@@ -242,12 +246,12 @@ def add_custom_model(uploaded_file, model_name: str, description: str):
             "name": model_name,
             "type": "custom",
             "file_path": model_path,
-            "accuracy": 0.0,  # 未知
-            "f1_score": 0.0,  # 未知
+            "accuracy": round(accuracy, 4),
+            "f1_score": round(f1_score, 4),
             "file_size_mb": round(file_size_mb, 2),
             "created_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
             "is_active": True,
-            "description": description
+            "description": f"{description} (Accuracy: {accuracy:.2%})"
         }
         
         model_info["models"].append(new_model)
@@ -257,10 +261,68 @@ def add_custom_model(uploaded_file, model_name: str, description: str):
             json.dump(model_info, f, indent=2)
         
         st.success(f"✅ モデル '{model_name}' が正常に追加されました！")
+        st.info(f"📊 評価結果: 精度 {accuracy:.2%}, F1スコア {f1_score:.2%}")
         st.info("ページを更新してモデル一覧を確認してください")
         
     except Exception as e:
         st.error(f"❌ モデル追加エラー: {e}")
+        # エラー時は保存したファイルを削除
+        if 'model_path' in locals() and os.path.exists(model_path):
+            os.remove(model_path)
+
+
+def evaluate_custom_model(model_path: str) -> tuple:
+    """カスタムモデルの性能を評価"""
+    try:
+        import joblib
+        from sklearn.metrics import accuracy_score, f1_score
+        from src.data.loader import DataLoaderFactory
+        from src.data.preprocessor import PreprocessorFactory
+        
+        # テストデータを読み込み
+        data_loader = DataLoaderFactory.create_loader(
+            "programming_language", 
+            min_samples_per_class=200
+        )
+        y_train, X_train, y_test, X_test = data_loader.load()
+        
+        # モデルを読み込み
+        model_data = joblib.load(model_path)
+        
+        if isinstance(model_data, dict):
+            # 新形式: モデルとベクトライザーが一緒に保存されている
+            model = model_data['model']
+            vectorizer = model_data['vectorizer']
+            
+            # テストデータを前処理
+            X_test_transformed = vectorizer.transform(X_test)
+            
+        else:
+            # 旧形式: モデルのみ
+            model = model_data
+            
+            # 前処理器を再構築
+            preprocessor = PreprocessorFactory.create_preprocessor(
+                "programming_language", 
+                normalize=False
+            )
+            preprocessor.fit(X_train)
+            
+            # テストデータを前処理
+            X_test_transformed = preprocessor.transform(X_test)
+        
+        # 予測実行
+        y_pred = model.predict(X_test_transformed)
+        
+        # 精度計算
+        accuracy = accuracy_score(y_test, y_pred)
+        f1 = f1_score(y_test, y_pred, average='weighted')
+        
+        return accuracy, f1
+        
+    except Exception as e:
+        st.warning(f"⚠️ 性能評価に失敗しました: {e}")
+        return 0.0, 0.0
 
 
 def validate_uploaded_model(uploaded_file):

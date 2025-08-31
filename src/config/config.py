@@ -9,6 +9,7 @@ class DataConfig:
     validation_split: float = 0.2
     normalize: bool = True
     min_samples_per_class: int = 10
+    lightweight: bool = False  # 軽量化モードフラグ
 
 @dataclass
 class ModelConfig:
